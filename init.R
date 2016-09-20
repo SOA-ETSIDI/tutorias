@@ -1,8 +1,16 @@
-source('../aux/funciones.R')
-source('../aux/defs.R')
+library(DT)
 
+source('../misc/funciones.R')
+source('../misc/defs.R')
+
+cursoActual <- '2016-2017'
+semestreActual <- 1
+
+dtOutput <- DT::dataTableOutput
+renderDT <- DT::renderDataTable
+
 ## Profesores, obtenidos mediante scrapping con directorio.R
-profesores <- readRDS('../data/profesores.Rds')
+profesores <- readRDS('../docencia/profesores.Rds')
 
 allProf <- lapply(seq_len(nrow(dptos)), function(i){
     codDpto <- dptos[i, "codigo"]

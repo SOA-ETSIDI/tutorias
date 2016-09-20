@@ -1,103 +1,170 @@
 library(shiny)
 library(shinyjs)
 library(openssl)
+library(openxlsx)
+library(stringi)
 
 source('init.R')
 
 shinyServer(function(input, output, session) {
     values <- reactiveValues()
-    observe({
+    observe(
+    {
         dpto <- input$dpto
         if (dpto != "")
-        {
+        {## Actualiza selector de profesores si se elige un departamento
             profes <- titlecase(profesores[[dpto]]$nombre)
             updateSelectInput(session, "nombre",
                               choices = c("", profes))
         }
         else
-        {
+        {## Si no se elige ningún departamento, entran todos los profesores.
             updateSelectInput(session, "nombre",
-                              choices = c("",
-                                          titlecase(allProf$nombre)))
+                              choices = c("", titlecase(allProf$nombre)))
         }
     })
+
     observe(
     {
+        ## Leo los ficheros del profesor elegido
         profe <- input$nombre
+        ## Elimino caracteres no letras y no ascii para nombre de fichero
+        values$profe <- stri_trans_general(
+            gsub("[^[:alpha:]]", "_", profe),
+            'latin-ascii')
         values$hash <- hash <- md5(toupper(profe))
-        fDocencia <- paste0('../docencia/pub/docencia_',
-                            hash, '.csv')
-        if (file.exists(fDocencia))
-            values$docencia <- read.csv2(fDocencia,
+        path <- '../docencia/pub/'
+        ## Docencia
+        docFile <- paste0(path, 'docencia_', hash, '.csv')
+        if (file.exists(docFile))
+        {
+            values$docencia <- read.csv2(docFile,
                                          stringsAsFactors = FALSE)
-        else values$docencia <- data.frame()
-
-        fTutoria <- paste0('../docencia/pub/tutoria_',
-                           hash, '.csv')
-        if (file.exists(fTutoria))
-            values$tutoria <- read.csv2(fTutoria,
+            ## Tutoría (asumo que si existe el fichero de docencia
+            ## también existe el de tutoria)
+            tutFile <- paste0(path, 'tutoria_', hash, '.csv')
+            values$tutoria <- read.csv2(tutFile,
                                         stringsAsFactors = FALSE)
-        else values$tutoria <- data.frame()
+            ## TFG (pero puede que no exista el de TFG)
+            TFGFile <- paste0(path, 'TFG_', hash, '.csv')
+            if (file.exists(TFGFile))
+                values$TFG <- read.csv2(TFGFile,
+                                        stringsAsFactors = FALSE)
+            else values$TFG <- data.frame()
 
-        fTFG <- paste0('../docencia/pub/TFG_',
-                       hash, '.csv')
-        if (file.exists(fTFG))
-            values$TFG <- read.csv2(fTFG,
-                                    stringsAsFactors = FALSE)
-        else values$TFG <- data.frame()
-    })
-    
-    output$tutoria <- renderUI(
-    {
-        if (nrow(values$tutoria) > 0)
-        {
-            show("botonPDF")
-            if (nrow(values$TFG) > 0)
-            {
-                values$tutoria$Tipo <- ''
-                values$TFG$Tipo <- 'TFG'
-                tutoria <- rbind(values$tutoria, values$TFG)
-            }
-            else
-            {
-                values$tutoria$Tipo <- ""
-                tutoria <- values$tutoria
-            }
-            tutDia <- split(tutoria[, c("Despacho", "Desde", "Hasta", "Tipo")],
-                             tutoria$Dia)
-            tutDia <- tutDia[order(factor(names(tutDia),
-                                            levels = dias))]
-
-            tutStr <- lapply(seq_along(tutDia), function(i)
-            {
-                dia <- h4(names(tutDia)[i])
-                item <- tutDia[[i]]
-                item <- item[order(item$Desde),]
-                item <- with(item,
-                             paste0(
-                                 Desde, ' a ', Hasta,
-                                 ifelse(Tipo == "TFG", " <strong>[TFG/TFM]</strong> ", ""),
-                                 ' (Despacho ', Despacho, ')'))
-                item <- tags$ul(lapply(item, function(x)tags$li(HTML(x))))
-                list(dia, item, br())
-            })
-            tags$div(tutStr)
-        } else
-        {
-            hide('botonPDF')
-            if (input$nombre =="") HTML("Elija un profesor para mostrar sus horarios de tutorías.")
-            else HTML("No existe información sobre los horarios de tutoría de este profesor.")
+            ## Muestro la UI de docencia
+            show(id = "docencia", anim = TRUE)
+            show(id = "tutoria", anim = TRUE)
+            show(id = "tfg", anim = TRUE)
+            show(id = "result", anim = TRUE)
+        } else {
+            hide(id = "docencia", anim = TRUE)
+            hide(id = "tutoria", anim = TRUE)
+            hide(id = "tfg", anim = TRUE)
+            hide(id = "result", anim = TRUE)
         }
     })
+
+    ## Muestra actividades registradas del profesor elegido
+    output$tablaDocencia <- renderDT(
+        values$docencia[, c('Titulacion', 'Asignatura', 'Grupo',
+                            'Dia', 'HoraInicio', 'HoraFinal',
+                            'Tipo', 'Inicio', 'Final')],
+        colnames = c('Titulación',
+                     'Asignatura',
+                     'Grupo de Matriculación',
+                     'Dia', 'Desde', 'Hasta',
+                     'Tipo de Docencia',
+                     'Semana Inicial',
+                     'Semana Final'),
+        rownames = FALSE,
+        options = list(
+            autoWidth = TRUE,
+            dom = 'tp',
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.7/i18n/Spanish.json'))
+    )
+
+    ## TUTORIAS
+    output$tablaTutoria <- renderDT(
+        values$tutoria[, c('Despacho', 'Dia', 'Desde', 'Hasta')],
+        rownames = FALSE,
+        ## filter = 'top',
+        options = list(
+            autoWidth = TRUE,
+            dom = 't',
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.7/i18n/Spanish.json'))
+    )
+    
+    ## TFG
+    output$tablaTFG <- renderDT(
+        values$TFG[, c('Despacho', 'Dia', 'Desde', 'Hasta')],
+        rownames = FALSE,
+        options = list(
+            autoWidth = TRUE,
+            dom = 't',
+            language = list(url = '//cdn.datatables.net/plug-ins/1.10.7/i18n/Spanish.json'))
+    )
+    
+    ## Descarga de ficheros: copio de los originales
+    output$dDocencia <- downloadHandler(
+        filename = function()
+        {
+            paste0('docencia_', values$profe, '.csv')
+        },
+        content = function(file)
+        {
+            file.copy(paste0('../docencia/pub/docencia_',
+                             values$hash, '.csv'),
+                      file)
+        }
+    )
+    output$dTutoria <- downloadHandler(
+        filename = function()
+        {
+            paste0('tutoria_', values$profe, '.csv')
+        },
+        content = function(file)
+        {
+            file.copy(paste0('../docencia/pub/tutoria_',
+                             values$hash, '.csv'),
+                      file)
+        }
+    )
+    output$dTFG <- downloadHandler(
+        filename = function()
+        {
+            paste0('TFG_', values$profe, '.csv')
+        },
+        content = function(file)
+        {
+            file.copy(paste0('../docencia/pub/TFG_',
+                             values$hash, '.csv'),
+                      file)
+        }
+    )
     output$dPDF <- downloadHandler(
         filename = function()
         {
-            paste0(values$hash, '.pdf')
+            paste0(values$profe, '.pdf')
         },
         content = function(file)
         {
             file.copy(paste0('../docencia/pub/', values$hash, '.pdf'),
                       file)
+        }
+    )
+    output$dExcel <- downloadHandler(
+        filename = function()
+        {
+            paste0(values$profe, '.xls')
+        },
+        content = function(file)
+        {## Genero un libro excel a partir de los csv
+            dfs <- list(values$docencia,
+                        values$tutoria,
+                        values$TFG)
+            names(dfs) <- c('Docencia', 'Tutoria', 'TFG')
+            xls <- write.xlsx(dfs, file)
         }
     )
 })

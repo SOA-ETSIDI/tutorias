@@ -1,12 +1,8 @@
 library(shiny)
 library(shinyjs)
 
-## ACTIVO MODO VERANO
-semestre <- 3
-
 source('init.R')
 
-
 logoUPM <- "http://www.upm.es/sfs/Rectorado/Gabinete%20del%20Rector/Logos/UPM/EscPolitecnica/EscUpmPolit_p.gif"
 logoETSIDI <- "http://www.upm.es/sfs/Rectorado/Gabinete%20del%20Rector/Logos/EUIT_Industrial/ETSI%20DISEN%C2%A6%C3%A2O%20INDUSTRIAL%20pqn%C2%A6%C3%A2.png"
 
@@ -15,17 +11,18 @@ logoETSIDI <- "http://www.upm.es/sfs/Rectorado/Gabinete%20del%20Rector/Logos/EUI
 header <- fluidRow(
     column(4, align = 'center', img(src = logoUPM)),
     column(4, align = 'center',
-           h2("Tutorías del profesorado"),
-           h4(paste0("Curso 2015-2016 (",
+           h2("Actividad Docente y Tutorías"),
+           h4(paste0("Curso ", cursoActual, " (",
                      c('Septiembre - Enero',
                        'Febrero - Junio',
-                       'Verano')[semestre],
+                       'Verano')[semestreActual],
                      ")")),
            h5("Subdirección de Ordenación Académica")),
     column(4, align = 'center', img(src = logoETSIDI))
 )
 
-selector <- wellPanel(
+## UI de profesor
+profesorUI <- wellPanel(
     fluidRow(
         column(6,
                selectInput('nombre', label = 'Nombre del profesor:',
@@ -55,27 +52,72 @@ selector <- wellPanel(
     ))
 
 
-result <- wellPanel(
+## UI de actividad docente
+docenciaUI <- div(
+    id = 'docencia',
+    h3("Actividad Docente"),
     fluidRow(
         column(12,
-               uiOutput('tutoria'))
-    ),
-    fluidRow(
-        column(12,
-               div(id = 'botonPDF',
-                   downloadButton2('dPDF', 'PDF', 'file-pdf-o'))
-               )
-    )
+               dtOutput("tablaDocencia")
+               )),
+    hr()
 )
 
+## UI de tutorías
+tutoriaUI <- div(
+    id = 'tutoria',
+    h3("Tutorías"),
+    fluidRow(
+        column(12,
+               dtOutput("tablaTutoria"))
+    ),
+    hr()
+)
+
+## UI de TFG-TFM
+TFGUI <- div(
+    id = 'tfg',
+    h3("TFG / TFM"),
+    fluidRow(
+        column(12,
+               dtOutput("tablaTFG"))
+    ),
+    hr()
+)
+
+
+## UI de cierre
+resultUI <- div(
+    id = 'result',
+    fluidRow(
+        column(3,
+               downloadButton2('dExcel', 'Excel', 'file-excel-o')
+               ),
+        column(3,
+               downloadButton2('dPDF', 'PDF', 'file-pdf-o')
+               ),
+        column(2,
+               downloadButton2('dDocencia', 'Docencia', 'table')
+               ),
+        column(2,
+               downloadButton2('dTutoria', 'Tutoria', 'table')
+               ),
+        column(2,
+               downloadButton2('dTFG', 'TFG / TFM', 'table')
+               )
+    ))
+
+ 
 ## UI completa
 shinyUI(
     fluidPage(
         useShinyjs(),
         includeCSS("styles.css"),
         header,
-        selector,
-        result
+        profesorUI,
+        hidden(resultUI),
+        hidden(docenciaUI),
+        hidden(tutoriaUI),
+        hidden(TFGUI)
     )
 )
-
