@@ -4,7 +4,7 @@ source('../misc/funciones.R')
 source('../misc/defs.R')
 
 cursoActual <- '2016-2017'
-semestreActual <- 1
+semestreActual <- 2
 
 dtOutput <- DT::dataTableOutput
 renderDT <- DT::renderDataTable
