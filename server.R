@@ -63,7 +63,7 @@ shinyServer(function(input, output, session) {
             hide(id = "tutoria", anim = TRUE)
             hide(id = "tfg", anim = TRUE)
             hide(id = "result", anim = TRUE)
-            show(id = "missing", anim = TRUE)
+            if (profe != "") show(id = "missing", anim = TRUE)
         }
     })
 
