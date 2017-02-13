@@ -53,6 +53,7 @@ shinyServer(function(input, output, session) {
             else values$TFG <- data.frame()
 
             ## Muestro la UI de docencia
+            hide(id = "missing")
             show(id = "docencia", anim = TRUE)
             show(id = "tutoria", anim = TRUE)
             show(id = "tfg", anim = TRUE)
@@ -62,6 +63,7 @@ shinyServer(function(input, output, session) {
             hide(id = "tutoria", anim = TRUE)
             hide(id = "tfg", anim = TRUE)
             hide(id = "result", anim = TRUE)
+            show(id = "missing", anim = TRUE)
         }
     })
 

@@ -106,6 +106,16 @@ resultUI <- div(
                downloadButton2('dTFG', 'TFG / TFM', 'table')
                )
     ))
+
+## UI de profesor vacio
+missingUI <- div(
+    id = 'missing',
+    fluidRow(
+        column(12,
+               p("El profesor seleccionado no ha cumplimentado sus horarios docentes y de tutorías, o no han sido publicados por la Dirección de su departamento.")
+               )),
+    hr()
+)
 
  
 ## UI completa
@@ -115,6 +125,7 @@ shinyUI(
         includeCSS("styles.css"),
         header,
         profesorUI,
+        hidden(missingUI),
         hidden(resultUI),
         hidden(docenciaUI),
         hidden(tutoriaUI),
