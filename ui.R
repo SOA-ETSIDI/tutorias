@@ -14,7 +14,7 @@ header <- fluidRow(
            h2("Actividad Docente y Tutorías"),
            h4(paste0("Curso ", cursoActual, " (",
                      c('Septiembre - Enero',
-                       'Febrero - Junio',
+                       'Febrero - Julio',
                        'Verano')[semestreActual],
                      ")")),
            h5("Subdirección de Ordenación Académica")),
