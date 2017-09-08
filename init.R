@@ -9,8 +9,13 @@ semestreActual <- 1
 dtOutput <- DT::dataTableOutput
 renderDT <- DT::renderDataTable
 
-## Profesores, obtenidos mediante scrapping con directorio.R
-profesores <- readRDS('../docencia/profesores.Rds')
+## Profesores de la ETSIDI
+old <- setwd('../directorio')
+profesores <- lapply(dptoCode,
+                 FUN = function(dpto)
+                     read.csv2(paste0(dpto, ".csv")))
+names(profesores) <- dptoCode
+setwd(old)
 
 allProf <- lapply(seq_len(nrow(dptos)), function(i){
     codDpto <- dptos[i, "codigo"]
