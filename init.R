@@ -11,19 +11,7 @@ renderDT <- DT::renderDataTable
 
 ## Profesores de la ETSIDI
 old <- setwd('../directorio')
-profesores <- lapply(dptoCode,
-                 FUN = function(dpto)
-                     read.csv2(paste0(dpto, ".csv")))
-names(profesores) <- dptoCode
+source('leeProfes.R')
 setwd(old)
-
-allProf <- lapply(seq_len(nrow(dptos)), function(i){
-    codDpto <- dptos[i, "codigo"]
-    data.frame(codDpto = codDpto,
-               dpto = dptos[i, "nombre"],
-               nombre = profesores[[codDpto]]["nombre"],
-               stringsAsFactors = FALSE)
-})
-allProf <- do.call(rbind, allProf)
 
 names(dptoCode) <- dptoName
