@@ -6,7 +6,7 @@ source('init.R')
 
 ## Cabecera con logos
 header <- fluidRow(
-    column(4, align = 'center', img(src = logoUPM)),
+    column(4, align = 'center', img(src = logoUPM, width = 72)),
     column(4, align = 'center',
            h2("Actividad Docente y Tutorías"),
            h4(paste0("Curso ", cursoActual, " (",
@@ -15,7 +15,7 @@ header <- fluidRow(
                        'Verano')[semestreActual],
                      ")")),
            h5("Subdirección de Ordenación Académica")),
-    column(4, align = 'center', img(src = logoETSIDI))
+    column(4, align = 'center', img(src = logoETSIDI, width = 72))
 )
 
 ## UI de profesor
